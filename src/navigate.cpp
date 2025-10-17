@@ -3,6 +3,7 @@
 #include "nav_msgs/Odometry.h"
 #include "kobuki_msgs/BumperEvent.h"
 #include "sensor_msgs/LaserScan.h"
+#include <cmath>
 #include <random>
 
 using namespace std;
@@ -29,7 +30,7 @@ private:
 
     // Robot speeds
     double linear_speed = 0.3;
-    double angular_speed = 1;
+    double angular_speed = 0.6;
 
     // Method for converting all angles to the range [-pi. pi]
     double correctAngle(double a) {
@@ -101,10 +102,12 @@ public:
         // Stored positions and angles used for movement
         double start_x = pos_x;
         double start_y = pos_y;
-        double target_angle = angle;
+        double start_angle = angle;
 
         // Flag for a fixed action turn
         bool uninterrupted_turn = false;
+
+        float turning_angle = 0;
 
         // init random generator
         std::random_device rd;
@@ -119,12 +122,12 @@ public:
             
             // RANDOM TURN BEHAVIOR
             if (sqrt((pos_x-start_x)*(pos_x-start_x) + (pos_y-start_y)*(pos_y-start_y)) > 0.3048 && !uninterrupted_turn && left_avg > 0.6 && right_avg > 0.6) {
-                target_angle = correctAngle(angle + distrib(gen));
+                turning_angle = distrib(gen);
+                start_angle = angle;
 
                 start_x = pos_x;
                 start_y = pos_y;
             }
-
 
             // AVOID ASYMETRIC OBJECTS BEHAVIOR
             if (left_avg < 0.6) {
@@ -134,27 +137,30 @@ public:
                 angular_wire = angular_speed;
             }
 
+            /*
             // AVOID SYMETRIC OBJECTS BEHAVIOR
             if (left_avg < 0.7 && right_avg < 0.7 && !uninterrupted_turn) {
-                target_angle = correctAngle(angle-3.14);
+                turning_angle = -3.14;
+                start_angle = angle;
                 uninterrupted_turn = true;
             }
             
             // Don't move if turning
             if (uninterrupted_turn) {
                 linear_wire = 0;
-            }
+            }*/
+            
 
-            // Rotate towards the target angle 
-            if (abs(target_angle-angle) > 0.05 && abs(abs(target_angle-angle)-6.28) > 0.05) {
-                if ((angle > target_angle && angle-target_angle < 3.14) || (angle < target_angle && angle-target_angle < -3.14)) {
-                    angular_wire = -angular_speed;
-                }
-                else {
+            if (abs(turning_angle) > abs(angle-start_angle)) {
+                if (turning_angle > 0) {
                     angular_wire = angular_speed;
+                }
+                else if (turning_angle < 0) {
+                    angular_wire = -angular_speed;
                 }
             }
             else {
+                turning_angle = 0;
                 uninterrupted_turn = false;
             }
 
@@ -162,13 +168,14 @@ public:
             if (abs(keyboard_linear) > 0.01 || abs(keyboard_angular) > 0.01) {
                 linear_wire = keyboard_linear;
                 angular_wire = keyboard_angular;
-                target_angle = angle;
+                turning_angle = 0;
                 uninterrupted_turn = false;
             }
 
             // HALT
             if (bumper_state) {
                 linear_wire = 0;
+                //angular_wire = 0;
             }
             
 
@@ -216,4 +223,7 @@ int main(int argc, char **argv)
 }
 
 // Command to run robot
+// roslaunch turtlebot_bringup minimal.launch
+// roslaunch turtlebot_bringup 3dsensor.launch
 // roslaunch turtlebot2_project2 room_hallway_world.launch
+// roslaunch turtlebot2_project2 turtlebot.launch

@@ -20,6 +20,6 @@
     <!-- Spawn TurtleBot2 -->
     <node pkg="gazebo_ros" type="spawn_model" name="spawn_turtlebot" args="-urdf -model turtlebot -param robot_description -x 0 -y 0 -z 0.1" />
 
-    <!-- Run navigate node -->
+    <!-- Run move node -->
     <node pkg="turtlebot2_project2" type="navigate" name="navigate" output="screen"/>
 </launch>
