@@ -33,11 +33,21 @@ private:
     double angular_speed = 0.6;
 
     // Method for converting all angles to the range [-pi. pi]
-    double correctAngle(double a) {
-        while (a > 3.14) {
+    double correctAnglePos(double a) {
+        while (a > 6.28) {
             a -= 6.28;
         }
-        while (a < -3.14) {
+        while (a < 0) {
+            a += 6.28;
+        }
+        return a;
+    }
+
+    double correctAngleNeg(double a) {
+        while (a > 0) {
+            a -= 6.28;
+        }
+        while (a < -6.28) {
             a += 6.28;
         }
         return a;
@@ -137,7 +147,7 @@ public:
                 angular_wire = angular_speed;
             }
 
-            /*
+            
             // AVOID SYMETRIC OBJECTS BEHAVIOR
             if (left_avg < 0.7 && right_avg < 0.7 && !uninterrupted_turn) {
                 turning_angle = -3.14;
@@ -148,20 +158,25 @@ public:
             // Don't move if turning
             if (uninterrupted_turn) {
                 linear_wire = 0;
-            }*/
-            
+            }
 
-            if (abs(turning_angle) > abs(angle-start_angle)) {
-                if (turning_angle > 0) {
+            if (turning_angle > 0) {
+                if (turning_angle > correctAnglePos(angle-start_angle)) {
                     angular_wire = angular_speed;
                 }
-                else if (turning_angle < 0) {
-                    angular_wire = -angular_speed;
+                else {
+                    turning_angle = 0;
+                    uninterrupted_turn = false;
                 }
             }
-            else {
-                turning_angle = 0;
-                uninterrupted_turn = false;
+            else if (turning_angle < 0) {
+                if (turning_angle < correctAngleNeg(angle-start_angle)) {
+                    angular_wire = -angular_speed;
+                }
+                else {
+                    turning_angle = 0;
+                    uninterrupted_turn = false;
+                }
             }
 
             // ACCEPT KEYBOARD INPUTS
