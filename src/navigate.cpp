@@ -77,7 +77,10 @@ public:
     // Gets Lidar data
     void getImage(const sensor_msgs::ImageConstPtr& msg) {
         printf("After data");
-        
+        int width = msg->width;
+        int height = msg->height;
+        int mid_row = height/2;
+        int step = msg->step;
     }    
 
     // move function
