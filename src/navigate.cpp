@@ -105,7 +105,7 @@ public:
             }
         }
         else if (msg->encoding == "16UC1") {
-            const uint16_t* depth_data = reinterpret_cast<const uint16_t>(&msg->data[0]);
+            const uint16_t* depth_data = reinterpret_cast<const uint16_t*>(msg->data.data());
             for (int r = mid_row - 2; r <= mid_row+2; r++) {
                 for (int c = 0; c < width; c++) {
                     float d = static_cast<float>(depth_data[c + r*width]) / 2000.0f;
