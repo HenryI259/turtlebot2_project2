@@ -81,6 +81,12 @@ public:
         int height = msg->height;
         int mid_row = height/2;
         int step = msg->step;
+
+        const float* depth_data = reinterpret_cast<const float*>(&msg->data[0]);
+
+        right_min = 10;
+        left_min = 10;
+
     }    
 
     // move function
