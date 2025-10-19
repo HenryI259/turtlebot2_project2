@@ -81,17 +81,48 @@ public:
         int mid_row = height/2;
         int step = msg->step;
 
-        const float* depth_data = reinterpret_cast<const float*>(&msg->data[0]);
-
         right_min = 10;
         left_min = 10;
 
         if (msg->encoding == "32FC1") {
-            printf("1");
-        } else if (msg->encoding == "16UC1") {
-            printf("2");
-        } else {
-            printf("3");
+            const float* depth_data = reinterpret_cast<const float*>(&msg->data[0]);
+            for (int r = mid_row - 2; r <= mid_row+2; r++) {
+                for (int c = 0; c < width; c++) {
+                    float d = depth_data[c + r*width]/2;
+                    if (!std::isnan(d) && d > 0) {
+                        if (c < width/2) {
+                            if (d < left_min) {
+                                left_min = d;
+                            }
+                        }
+                        else{
+                            if (d < right_min) {
+                                right_min = d;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else if (msg->encoding == "16UC1") {
+            const uint16_t* depth_data = reinterpret_cast<const uint16_t>(&msg->data[0]);
+            for (int r = mid_row - 2; r <= mid_row+2; r++) {
+                for (int c = 0; c < width; c++) {
+                    float d = static_cast<float>(depth_data[c + r*width]) / 2000.0f;
+                    if (!std::isnan(d) && d > 0) {
+                        if (c < width/2) {
+                            if (d < left_min) {
+                                left_min = d;
+                            }
+                        }
+                        else{
+                            if (d < right_min) {
+                                right_min = d;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }    
 
