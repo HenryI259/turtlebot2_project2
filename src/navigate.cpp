@@ -25,12 +25,12 @@ private:
     int bumper_state;
 
     // Lidar Distances
-    double right_min;
-    double left_min;
+    double right_min = 10;
+    double left_min = 10;
 
     // Robot speeds
     double linear_speed = 0.3;
-    double angular_speed = 0.6;
+    double angular_speed = 1;
 
     // Method for converting all angles to the range [-pi. pi]
     double correctAnglePos(double a) {
@@ -88,7 +88,7 @@ public:
 
         for (int r = mid_row - 2; r <= mid_row+2; r++) {
             for (int c = 0; c < width; c++) {
-                float d = depth_data[c + r*width];
+                float d = depth_data[c + r*width]/2;
                 if (!std::isnan(d) && d > 0) {
                     if (c < width/2) {
                         if (d < left_min) {
@@ -103,7 +103,6 @@ public:
                 }
             }
         }
-        printf("Left: %lf Right: %lf", left_min, right_min);
     }    
 
     // move function
@@ -145,14 +144,16 @@ public:
             // AVOID ASYMETRIC OBJECTS BEHAVIOR
             if (left_min < 0.305) {
                 angular_wire = -angular_speed;
+                linear_wire = linear_speed/2;
             }
             else if (right_min < 0.305) {
                 angular_wire = angular_speed;
+                linear_wire = linear_speed/2;
             }
 
             
             // AVOID SYMETRIC OBJECTS BEHAVIOR
-            if (left_min < 0.305 && right_min < 0.305 && !uninterrupted_turn) {
+            if (left_min < 0.4 && right_min < 0.4 && !uninterrupted_turn) {
                 turning_angle = -3.14;
                 start_angle = angle;
                 uninterrupted_turn = true;
@@ -193,7 +194,7 @@ public:
             // HALT
             if (bumper_state) {
                 linear_wire = 0;
-                angular_wire = 0;
+                //angular_wire = 0;
             }
             
 
