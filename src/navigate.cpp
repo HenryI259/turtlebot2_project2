@@ -87,6 +87,23 @@ public:
         right_min = 10;
         left_min = 10;
 
+        for (int r = mid_row - 2; r <= mid_row+2; r++) {
+            for (int c = 0; c < width; c++) {
+                float d = depth_data[c + r*width]/2;
+                if (!std::isnan(d) && d > 0) {
+                    if (c < width/2) {
+                        if (d < left_min) {
+                            left_min = d;
+                        }
+                    }
+                    else{
+                        if (d < right_min) {
+                            right_min = d;
+                        }
+                    }
+                }
+            }
+        }
     }    
 
     // move function
