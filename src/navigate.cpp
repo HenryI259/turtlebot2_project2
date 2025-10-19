@@ -2,7 +2,7 @@
 #include "geometry_msgs/Twist.h"
 #include "nav_msgs/Odometry.h"
 #include "kobuki_msgs/BumperEvent.h"
-#include "sensor_msgs/Image.h>
+#include "sensor_msgs/Image.h"
 #include <cmath>
 #include <random>
 
@@ -86,7 +86,7 @@ public:
         right_min = 10;
         left_min = 10;
 
-        for (int r = row - 2; r <= row+2; r++) {
+        for (int r = mid_row - 2; r <= mid_row+2; r++) {
             for (int c = 0; c < width; c++) {
                 float d = depth_data[c + r*width];
                 if (!std::isnan(d) && d > 0) {
@@ -103,34 +103,7 @@ public:
                 }
             }
         }
-        
-        
-        
-        int size = msg->ranges.size();
-        int mid = size/2;
-
-        double right_sum = 0;
-        double left_sum = 0;
-        int right_count = 0;
-        int left_count = 0;
-
-        // Find averages for both sides
-        for (int i = 0; i < size; i++) {
-            double dis = msg->ranges[i];
-            if (dis < msg->range_max && dis > msg->range_min) {
-                if (i > mid) {
-                    left_sum += dis;
-                    left_count++;
-                }
-                else {
-                    right_sum += dis;
-                    right_count++;
-                }
-            }
-        }
-
-        left_min = (left_count > 0) ? left_sum / left_count : msg->range_max;
-        right_min = (right_count > 0) ? right_sum / right_count : msg->range_max;
+        printf("Left: %lf Right: %lf", left_min, right_min);
     }    
 
     // move function
