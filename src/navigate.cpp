@@ -76,6 +76,7 @@ public:
     }
     // Gets Lidar data
     void getImage(const sensor_msgs::ImageConstPtr& msg) {
+        printf("After data");
         int width = msg->width;
         int height = msg->height;
         int mid_row = height/2;
@@ -207,6 +208,7 @@ public:
             pub.publish(vel_msg);
 
             // Retrieve data from the topics
+            printf("Before data");
             ros::spinOnce();
             rate.sleep();
         }
