@@ -8,12 +8,6 @@
 
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" />
 
-    <node pkg="depthimage_to_laserscan" type="depthimage_to_laserscan_node" name="depth_to_scan">
-        <param name="output_frame" value="camera_depth_frame"/>
-        <remap from="depth" to="/camera/depth/image_raw"/>
-        <remap from="scan" to="/scan"/>
-    </node>
-
     <!-- Run navigate node -->
     <node pkg="turtlebot2_project2" type="navigate" name="navigate" output="screen"/>
 </launch>

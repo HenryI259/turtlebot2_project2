@@ -2,7 +2,7 @@
 #include "geometry_msgs/Twist.h"
 #include "nav_msgs/Odometry.h"
 #include "kobuki_msgs/BumperEvent.h"
-#include "sensor_msgs/LaserScan.h"
+#include "sensor_msgs/Image.h>
 #include <cmath>
 #include <random>
 
@@ -25,8 +25,8 @@ private:
     int bumper_state;
 
     // Lidar Distances
-    double right_avg;
-    double left_avg;
+    double right_min;
+    double left_min;
 
     // Robot speeds
     double linear_speed = 0.3;
@@ -75,7 +75,37 @@ public:
         bumper_state = msg->state;
     }
     // Gets Lidar data
-    void getLidar(const sensor_msgs::LaserScan::ConstPtr& msg) {
+    void getImage(const sensor_msgs::ImageConstPtr& msg) {
+        int width = msg->width;
+        int height = msg->height;
+        int mid_row = height/2;
+        int step = msg->step;
+
+        const float* depth_data = reinterpret_cast<const float*>(&msg->data[0]);
+
+        right_min = 10;
+        left_min = 10;
+
+        for (int r = row - 2; r <= row+2; r++) {
+            for (int c = 0; c < width; c++) {
+                float d = depth_data[c + r*width];
+                if (!std::isnan(d) && d > 0) {
+                    if (c < width/2) {
+                        if (d < left_min) {
+                            left_min = d;
+                        }
+                    }
+                    else{
+                        if (d < right_min) {
+                            right_min = d;
+                        }
+                    }
+                }
+            }
+        }
+        
+        
+        
         int size = msg->ranges.size();
         int mid = size/2;
 
@@ -99,8 +129,8 @@ public:
             }
         }
 
-        left_avg = (left_count > 0) ? left_sum / left_count : msg->range_max;
-        right_avg = (right_count > 0) ? right_sum / right_count : msg->range_max;
+        left_min = (left_count > 0) ? left_sum / left_count : msg->range_max;
+        right_min = (right_count > 0) ? right_sum / right_count : msg->range_max;
     }    
 
     // move function
@@ -131,7 +161,7 @@ public:
             angular_wire = 0;
             
             // RANDOM TURN BEHAVIOR
-            if (sqrt((pos_x-start_x)*(pos_x-start_x) + (pos_y-start_y)*(pos_y-start_y)) > 0.3048 && !uninterrupted_turn && left_avg > 0.6 && right_avg > 0.6) {
+            if (sqrt((pos_x-start_x)*(pos_x-start_x) + (pos_y-start_y)*(pos_y-start_y)) > 0.3048 && !uninterrupted_turn && left_min > 0.6 && right_min > 0.6) {
                 turning_angle = distrib(gen);
                 start_angle = angle;
 
@@ -140,16 +170,16 @@ public:
             }
 
             // AVOID ASYMETRIC OBJECTS BEHAVIOR
-            if (left_avg < 0.6) {
+            if (left_min < 0.305) {
                 angular_wire = -angular_speed;
             }
-            else if (right_avg < 0.6) {
+            else if (right_min < 0.305) {
                 angular_wire = angular_speed;
             }
 
             
             // AVOID SYMETRIC OBJECTS BEHAVIOR
-            if (left_avg < 0.7 && right_avg < 0.7 && !uninterrupted_turn) {
+            if (left_min < 0.305 && right_min < 0.305 && !uninterrupted_turn) {
                 turning_angle = -3.14;
                 start_angle = angle;
                 uninterrupted_turn = true;
@@ -190,7 +220,7 @@ public:
             // HALT
             if (bumper_state) {
                 linear_wire = 0;
-                //angular_wire = 0;
+                angular_wire = 0;
             }
             
 
@@ -227,7 +257,7 @@ int main(int argc, char **argv)
     ros::Subscriber odom_sub = nh.subscribe("/odom", 10, &ExplorerRobot::getPosition, &robot);
     ros::Subscriber teleop_sub = nh.subscribe("/my_teleop_node/cmd_vel", 10, &ExplorerRobot::getInputs, &robot);
     ros::Subscriber bumper_sub = nh.subscribe("/mobile_base/events/bumper", 10, &ExplorerRobot::getBumper, &robot);
-    ros::Subscriber lidar_sub = nh.subscribe("/scan", 10, &ExplorerRobot::getLidar, &robot);
+    ros::Subscriber lidar_sub = nh.subscribe("/camera/depth/image_raw", 10, &ExplorerRobot::getImage, &robot);
 
     ros::Rate rate(60);
 
