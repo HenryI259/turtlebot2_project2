@@ -86,7 +86,13 @@ public:
         right_min = 10;
         left_min = 10;
 
-        printf("Width: %d Height: %d\n", width, height);
+        if (msg->encoding == "32FC1") {
+            printf("1");
+        } else if (msg->encoding == "16UC1") {
+            printf("2");
+        } else {
+            printf("3");
+        }
     }    
 
     // move function
