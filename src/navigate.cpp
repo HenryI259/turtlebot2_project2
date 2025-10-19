@@ -24,7 +24,7 @@ private:
     int bumper_side;
     int bumper_state;
 
-    // Lidar Distances
+    // Image Distances
     double right_min = 10;
     double left_min = 10;
 
@@ -32,7 +32,7 @@ private:
     double linear_speed = 0.3;
     double angular_speed = 1;
 
-    // Method for converting all angles to the range [-pi. pi]
+    // Method for converting all angles to the range [0, 2pi]
     double correctAnglePos(double a) {
         while (a > 6.28) {
             a -= 6.28;
@@ -43,6 +43,7 @@ private:
         return a;
     }
 
+    // Method for converting all angles to the range [-2pi, 0]
     double correctAngleNeg(double a) {
         while (a > 0) {
             a -= 6.28;
@@ -74,7 +75,7 @@ public:
         bumper_side = msg->bumper;
         bumper_state = msg->state;
     }
-    // Gets Lidar data
+    // Gets Image data
     void getImage(const sensor_msgs::ImageConstPtr& msg) {
         int width = msg->width;
         int height = msg->height;
@@ -84,6 +85,7 @@ public:
         right_min = 10;
         left_min = 10;
 
+        // Encodings differ for each sensor
         if (msg->encoding == "32FC1") {
             const float* depth_data = reinterpret_cast<const float*>(&msg->data[0]);
             for (int r = mid_row - 2; r <= mid_row+2; r++) {
@@ -185,6 +187,7 @@ public:
                 linear_wire = 0;
             }
 
+            // Turn until the robot passes its target
             if (turning_angle > 0) {
                 if (turning_angle > correctAnglePos(angle-start_angle)) {
                     angular_wire = angular_speed;
@@ -215,7 +218,7 @@ public:
             // HALT
             if (bumper_state) {
                 linear_wire = 0;
-                //angular_wire = 0;
+                angular_wire = 0;
             }
             
 
